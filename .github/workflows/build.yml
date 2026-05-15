@@ -46,17 +46,9 @@ jobs:
 
       - name: Build build-containers images
         run: |
-          chmod +x build-containers/build.sh
-
           cd build-containers
-
-          sed -i '/podman_build windows/s/^/#/' build.sh
-          sed -i '/podman_build web/s/^/#/' build.sh
-          sed -i '/podman_build android/s/^/#/' build.sh
-          sed -i '/podman_build osx/s/^/#/' build.sh
-          sed -i '/podman_build appleembedded/s/^/#/' build.sh
-
-          ./build.sh master f43
+          chmod +x ../custom_build.sh
+          ../custom_build.sh master f43 linux
 
       - name: Build Linux template
         run: |
