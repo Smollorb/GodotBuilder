@@ -57,7 +57,7 @@ jobs:
           -v ${{ github.workspace }}/godot:/godot \
           -v $HOME/.scons_cache:/root/.scons_cache \
           -w /godot \
-          godot-linux:master-f43 \
+          localhost/godot-linux:master-f43 \
           bash -c 'export PATH=$GODOT_SDK_LINUX_X86_64/bin:$PATH && scons cache_path=/root/.scons_cache platform=linuxbsd target=template_release production=yes'
       
       - name: Build Linux editor
@@ -66,7 +66,7 @@ jobs:
           -v ${{ github.workspace }}/godot:/godot \
           -v $HOME/.scons_cache:/root/.scons_cache \
           -w /godot \
-          godot-linux:master-f43 \
+          localhost/godot-linux:master-f43 \
           bash -c 'export PATH=$GODOT_SDK_LINUX_X86_64/bin:$PATH && scons cache_path=/root/.scons_cache platform=linuxbsd target=editor production=yes'
 
 
