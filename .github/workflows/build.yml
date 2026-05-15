@@ -47,6 +47,7 @@ jobs:
       - name: Build Linux image
         run: |
           docker build \
+          --build-arg img_version=master-f43 \
           -t godot-linux-builder:latest \
           -f build-containers/Dockerfile.linux \
           build-containers/
