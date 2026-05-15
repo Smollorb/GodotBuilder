@@ -1,0 +1,3 @@
+[submodule "build-containers"]
+	path = build-containers
+	url = https://github.com/godotengine/build-containers.git
