@@ -12,9 +12,13 @@ jobs:
         uses: actions/checkout@v4
         with:
           submodules: recursive
-      
+          fetch-depth: 1
+
       - name: Clone Godot
-        run: git clone https://github.com/godotengine/godot.git --depth 1
+        run: |
+          git clone https://github.com/godotengine/godot.git
+          cd godot
+          git checkout 7775792057009cb27068f1a3252902fb9c991836
       
       - name: Upload sources
         uses: actions/upload-artifact@v4
@@ -22,15 +26,36 @@ jobs:
           name: godot-source
           path: godot
   
-  build_linux:
+  build_templates:
     runs-on: ubuntu-latest
     needs: prepare
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: linux
+            image: godot-linux
+            scons_platform: linuxbsd
+          
+          - name: windows
+            image: godot-windows
+            scons_platform: windows
+
+          - name: web
+            image: godot-web
+            scons_platform: web
+          
+          - name: android
+            image: godot-android
+            scons_platform: android
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
           submodules: recursive
+          fetch-depth: 1
         
       - name: Download Godot
         uses: actions/download-artifact@v4
@@ -41,8 +66,8 @@ jobs:
       - name: Cache SCons
         uses: actions/cache@v4
         with:
-          path: $HOME/.scons_cache
-          key: ${{ runner.os }}-scons-${{ hashFiles('godot/**') }}
+          path: ~/.scons_cache
+          key: ${{ runner.os }}-scons-${{ matrix.name }}
 
       - name: Ensure SCons cache directory exists
         run: mkdir -p $HOME/.scons_cache
@@ -52,29 +77,89 @@ jobs:
           cp custom_build.sh build-containers/custom_build.sh
           cd build-containers
           chmod +x ./custom_build.sh
-          ./custom_build.sh master f43 linux
+          ./custom_build.sh master f43 ${{ matrix.name }}
 
-      - name: Build Linux template
+      - name: Debug tree
+        run: find . -maxdepth 3
+
+      - name: Build template
         run: |
           podman run --rm \
           -v ${{ github.workspace }}/godot:/godot \
           -v $HOME/.scons_cache:/root/.scons_cache \
           -w /godot \
-          godot-linux:master-f43 \
-          bash -c 'export PATH=$GODOT_SDK_LINUX_X86_64/bin:$PATH && scons cache_path=/root/.scons_cache platform=linuxbsd target=template_release production=yes'
+          ${{ matrix.image }}:master-f43 \
+          bash -c 'scons cache_path=/root/.scons_cache platform=${{ matrix.scons_platform }} target=template_release production=yes'
       
-      - name: Build Linux editor
+      - name: Collect binaries
         run: |
-          podman run --rm \
-          -v ${{ github.workspace }}/godot:/godot \
-          -v $HOME/.scons_cache:/root/.scons_cache \
-          -w /godot \
-          godot-linux:master-f43 \
-          bash -c 'export PATH=$GODOT_SDK_LINUX_X86_64/bin:$PATH && scons cache_path=/root/.scons_cache platform=linuxbsd target=editor production=yes'
+          mkdir -p artifacts/${{ matrix.name }}
+          find godot/bin -maxdepth 1 -type f -exec cp {} artifacts/${{ matrix.name }}/ \;
 
-
-      - name: Upload linux binaries
+      - name: Upload binaries
         uses: actions/upload-artifact@v4
         with:
-          name: linux-binaries
-          path: godot/bin/*
+          name: ${{ matrix.name }}
+          path: artifacts/${{ matrix.name }}/*
+  
+  combine:
+    runs-on: ubuntu-latest
+    needs: build_templates
+
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        fetch-depth: 1
+
+      - name: Download Linux binaries
+        uses: actions/download-artifact@v4
+        with:
+          name: linux
+          path: artifacts/linux
+
+      - name: Download Windows binaries
+        uses: actions/download-artifact@v4
+        with:
+          name: windows
+          path: artifacts/windows
+
+      - name: Download Web binaries
+        uses: actions/download-artifact@v4
+        with:
+          name: web
+          path: artifacts/web
+
+      - name: Download Android binaries
+        uses: actions/download-artifact@v4
+        with:
+          name: android
+          path: artifacts/android
+      
+      - name: Prepare final image files
+        run: |
+          mkdir -p final/templates
+
+          cp artifacts/linux/*editor* final/godot.x86_64 || true
+
+          cp artifacts/linux/*template* final/templates/ || true
+          cp artifacts/windows/* final/templates/ || true
+          cp artifacts/web/* final/templates/ || true
+          cp artifacts/android/* final/templates/ || true
+
+      - name: Login to GHCR
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | podman login ghcr.io -u ${{ github.actor }} --password-stdin
+      
+      - name: Build final image
+        run: |
+          podman build \
+            -t ghcr.io/${{ github.repository_owner }}/godot-builder:latest \
+            -f Dockerfile.final \
+            final
+
+      - name: Push image
+        run: |
+          podman push ghcr.io/${{ github.repository_owner }}/godot-builder:latest
