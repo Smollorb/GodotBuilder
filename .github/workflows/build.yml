@@ -41,8 +41,11 @@ jobs:
       - name: Cache SCons
         uses: actions/cache@v4
         with:
-          path: ~/.scons_cache
+          path: $HOME/.scons_cache
           key: ${{ runner.os }}-scons-${{ hashFiles('godot/**') }}
+
+      - name: Ensure SCons cache directory exists
+        run: mkdir -p $HOME/.scons_cache
 
       - name: Build build-containers images
         run: |
