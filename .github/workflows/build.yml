@@ -44,13 +44,19 @@ jobs:
           path: ~/.scons_cache
           key: ${{ runner.os }}-scons-${{ hashFiles('godot/**') }}
 
-      - name: Build Linux image
+      - name: Build build-containers images
         run: |
-          docker build \
-          --build-arg img_version=master-f43 \
-          -t godot-linux-builder:latest \
-          -f build-containers/Dockerfile.linux \
-          build-containers/
+          chmod +x build-containers/build.sh
+
+          cd build-containers
+
+          sed -i '/podman_build windows/s/^/#/' build.sh
+          sed -i '/podman_build web/s/^/#/' build.sh
+          sed -i '/podman_build android/s/^/#/' build.sh
+          sed -i '/podman_build osx/s/^/#/' build.sh
+          sed -i '/podman_build appleembedded/s/^/#/' build.sh
+
+          ./build.sh master f43
 
       - name: Build Linux template
         run: |
@@ -58,7 +64,7 @@ jobs:
           -v ${{ github.workspace }}/godot:/godot \
           -v $HOME/.scons_cache:/root/.scons_cache \
           -w /godot \
-          godot-linux-builder:latest \
+          godot-linux:master-f43 \
           bash -c 'export PATH=$GODOT_SDK_LINUX_X86_64/bin:$PATH && scons cache_path=/root/.scons_cache platform=linuxbsd target=template_release production=yes'
       
       - name: Build Linux editor
@@ -67,12 +73,12 @@ jobs:
           -v ${{ github.workspace }}/godot:/godot \
           -v $HOME/.scons_cache:/root/.scons_cache \
           -w /godot \
-          godot-linux-builder:latest \
+          godot-linux:master-f43 \
           bash -c 'export PATH=$GODOT_SDK_LINUX_X86_64/bin:$PATH && scons cache_path=/root/.scons_cache platform=linuxbsd target=editor production=yes'
 
 
-      - name: Upload linux template
+      - name: Upload linux binaries
         uses: actions/upload-artifact@v4
         with:
-          name: linux-template
+          name: linux-binaries
           path: godot/bin/*
