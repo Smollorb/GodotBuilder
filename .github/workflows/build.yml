@@ -1,0 +1,77 @@
+name: Build Godot Docker Image
+on:
+  workflow_dispatch:
+  push:
+
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      
+      - name: Clone Godot
+        run: git clone https://github.com/godotengine/godot.git --depth 1
+      
+      - name: Upload sources
+        uses: actions/upload-artifact@v4
+        with:
+          name: godot-source
+          path: godot
+  
+  build_linux:
+    runs-on: ubuntu-latest
+    needs: prepare
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+        
+      - name: Download Godot
+        uses: actions/download-artifact@v4
+        with:
+          name: godot-source
+          path: .
+      
+      - name: Cache SCons
+        uses: actions/cache@v4
+        with:
+          path: ~/.scons_cache
+          key: ${{ runner.os }}-scons-${{ hashFiles('godot/**') }}
+
+      - name: Build Linux image
+        run: |
+          docker build \
+          -t godot-linux-builder:latest \
+          -f build-containers/Dockerfile.linux \
+          build-containers/
+
+      - name: Build Linux template
+        run: |
+          docker run --rm \
+          -v ${{ github.workspace }}/godot:/godot \
+          -v $HOME/.scons_cache:/root/.scons_cache \
+          -w /godot \
+          godot-linux-builder:latest \
+          bash -c 'export PATH=$GODOT_SDK_LINUX_X86_64/bin:$PATH && scons cache_path=/root/.scons_cache platform=linuxbsd target=template_release production=yes'
+      
+      - name: Build Linux editor
+        run: |
+          docker run --rm \
+          -v ${{ github.workspace }}/godot:/godot \
+          -v $HOME/.scons_cache:/root/.scons_cache \
+          -w /godot \
+          godot-linux-builder:latest \
+          bash -c 'export PATH=$GODOT_SDK_LINUX_X86_64/bin:$PATH && scons cache_path=/root/.scons_cache platform=linuxbsd target=editor production=yes'
+
+
+      - name: Upload linux template
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux-template
+          path: godot/bin/*
