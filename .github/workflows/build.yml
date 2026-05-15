@@ -53,20 +53,20 @@ jobs:
 
       - name: Build Linux template
         run: |
-          docker run --rm \
+          podman run --rm \
           -v ${{ github.workspace }}/godot:/godot \
           -v $HOME/.scons_cache:/root/.scons_cache \
           -w /godot \
-          localhost/godot-linux:master-f43 \
+          godot-linux:master-f43 \
           bash -c 'export PATH=$GODOT_SDK_LINUX_X86_64/bin:$PATH && scons cache_path=/root/.scons_cache platform=linuxbsd target=template_release production=yes'
       
       - name: Build Linux editor
         run: |
-          docker run --rm \
+          podman run --rm \
           -v ${{ github.workspace }}/godot:/godot \
           -v $HOME/.scons_cache:/root/.scons_cache \
           -w /godot \
-          localhost/godot-linux:master-f43 \
+          godot-linux:master-f43 \
           bash -c 'export PATH=$GODOT_SDK_LINUX_X86_64/bin:$PATH && scons cache_path=/root/.scons_cache platform=linuxbsd target=editor production=yes'
 
 
