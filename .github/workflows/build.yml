@@ -46,9 +46,10 @@ jobs:
 
       - name: Build build-containers images
         run: |
+          cp custom_build.sh build-containers/custom_build.sh
           cd build-containers
-          chmod +x ../custom_build.sh
-          ../custom_build.sh master f43 linux
+          chmod +x ./custom_build.sh
+          ./custom_build.sh master f43 linux
 
       - name: Build Linux template
         run: |
