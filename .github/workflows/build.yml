@@ -49,7 +49,7 @@ jobs:
           - name: android
             image: godot-android
             scons_platform: android
-            extra_args: "swappy=no"
+            extra_args: "swappy=no generate_apk=yes"
             sdk_path: '${GODOT_SDK_LINUX_X86_64}/bin'
 
     steps:
@@ -73,15 +73,15 @@ jobs:
       - name: Ensure SCons cache directory exists
         run: mkdir -p $HOME/.scons_cache
 
+      - name: Debug tree
+        run: find . -maxdepth 3
+
       - name: Build build-containers images
         run: |
           cp custom_build.sh build-containers/custom_build.sh
           cd build-containers
           chmod +x ./custom_build.sh
           ./custom_build.sh master f43 ${{ matrix.name }}
-
-      - name: Debug tree
-        run: find . -maxdepth 3
 
       - name: Build template
         run: |
@@ -90,7 +90,16 @@ jobs:
             -v $HOME/.scons_cache:/root/.scons_cache \
             -w /godot \
             ${{ matrix.image }}:master-f43 \
-            bash -c 'export PATH=${{ matrix.sdk_path }}:$PATH && scons cache_path=/root/.scons_cache platform=${{ matrix.scons_platform }} target=template_release production=yes ${{ matrix.extra_args }}'
+            bash -c '
+              if [ -f /emsdk/emsdk_env.sh ]; then
+                source /emsdk/emsdk_env.sh
+              else
+                export PATH=${GODOT_SDK_LINUX_X86_64}/bin:$PATH
+              fi
+            
+              scons cache_path=/root/.scons_cache platform=${{ matrix.scons_platform }} \
+              target=template_release production=yes ${{ matrix.extra_args }}
+            '
       - name: Collect binaries
         run: |
           mkdir -p artifacts/${{ matrix.name }}
