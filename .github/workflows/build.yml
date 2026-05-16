@@ -87,7 +87,7 @@ jobs:
           -v $HOME/.scons_cache:/root/.scons_cache \
           -w /godot \
           ${{ matrix.image }}:master-f43 \
-          bash -c 'scons cache_path=/root/.scons_cache platform=${{ matrix.scons_platform }} target=template_release production=yes'
+          bash -c 'export PATH=$GODOT_SDK_LINUX_X86_64/bin:$PATH && scons cache_path=/root/.scons_cache platform=${{ matrix.scons_platform }} target=template_release production=yes'
       
       - name: Collect binaries
         run: |
