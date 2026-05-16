@@ -2,6 +2,7 @@ FROM ubuntu:24.04
 ARG GODOT_VERSION
 
 RUN apt update && apt install -y \
+    git \
     libfontconfig1 \
     libx11-6 \
     libxcursor1 \

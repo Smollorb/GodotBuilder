@@ -223,6 +223,7 @@ jobs:
 
       - name: Build final image
         run: |
+          chmod +x final/godot.x86_64
           SHORT_COMMIT=$(echo ${{ inputs.godot_commit }} | cut -c1-7)
           NAME=${SHORT_COMMIT}-${{ inputs.build_profile }}
           GODOT_VERSION=$(./final/godot.x86_64 --version | sed 's/\.custom_build//')
