@@ -36,21 +36,25 @@ jobs:
             scons_platform: linuxbsd
             extra_args: "accesskit=no"
             sdk_path: '${GODOT_SDK_LINUX_X86_64}/bin'
+            build_editor: true
           - name: windows
             image: godot-windows
             scons_platform: windows
             extra_args: "d3d12=no winrt=no accesskit=no"
             sdk_path: '${GODOT_SDK_LINUX_X86_64}/bin'
+            build_editor: false
           - name: web
             image: godot-web
             scons_platform: web
             extra_args: ""
             sdk_path: '/usr/local/emsdk/upstream/emscripten'
+            build_editor: false
           - name: android
             image: godot-android
             scons_platform: android
             extra_args: "swappy=no generate_apk=yes"
             sdk_path: '${GODOT_SDK_LINUX_X86_64}/bin'
+            build_editor: false
 
     steps:
       - name: Checkout
@@ -94,9 +98,25 @@ jobs:
                 export PATH=${GODOT_SDK_LINUX_X86_64}/bin:$PATH
               fi
             
+              chmod +x platform/android/java/gradlew 2>/dev/null || true
               scons cache_path=/root/.scons_cache platform=${{ matrix.scons_platform }} \
               target=template_release production=yes ${{ matrix.extra_args }}
             '
+      
+      - name: Build editor
+        if: matrix.build_editor
+        run: |
+          podman run --rm \
+            -v ${{ github.workspace }}/godot:/godot \
+            -v $HOME/.scons_cache:/root/.scons_cache \
+            -w /godot \
+            ${{ matrix.image }}:master-f43 \
+            bash -c '
+              export PATH=${GODOT_SDK_LINUX_X86_64}/bin:$PATH
+              chmod +x platform/android/java/gradlew 2>/dev/null || true
+              scons cache_path=/root/.scons_cache platform=${{ matrix.scons_platform }} target=editor production=yes ${{ matrix.extra_args }}
+            '
+
       - name: Collect binaries
         run: |
           mkdir -p artifacts/${{ matrix.name }}
