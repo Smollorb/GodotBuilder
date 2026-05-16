@@ -141,6 +141,7 @@ jobs:
       - name: Build editor
         if: matrix.build_editor
         run: |
+          rm godot/custom.py
           podman run --rm \
             -v ${{ github.workspace }}/godot:/godot \
             -v $HOME/.scons_cache:/root/.scons_cache \
