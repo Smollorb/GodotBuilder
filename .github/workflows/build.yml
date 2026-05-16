@@ -132,12 +132,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Download Linux binaries
-        uses: actions/download-artifact@v4
-        with:
-          name: linux
-          path: artifacts/linux
-
       - name: Download Windows binaries
         uses: actions/download-artifact@v4
         with:
