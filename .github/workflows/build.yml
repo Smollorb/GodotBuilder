@@ -172,7 +172,7 @@ jobs:
           cp artifacts/android/* final/templates/ || true
 
       - name: Login to GHCR
-        run: run: echo "${{ secrets.GITHUB_TOKEN }}" | podman login ghcr.io -u ${{ github.actor }} --password-stdin
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | podman login ghcr.io -u ${{ github.actor }} --password-stdin
 
       - name: Build final image
         run: |
