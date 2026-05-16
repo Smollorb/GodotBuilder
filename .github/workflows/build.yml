@@ -31,6 +31,12 @@ jobs:
       fail-fast: false
       matrix:
         include:
+          - name: linux
+            image: godot-linux
+            scons_platform: linuxbsd
+            extra_args: "accesskit=no"
+            sdk_path: '${GODOT_SDK_LINUX_X86_64}/bin'
+            build_editor: true
           - name: windows
             image: godot-windows
             scons_platform: windows
@@ -131,6 +137,12 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Download Linux binaries
+        uses: actions/download-artifact@v4
+        with:
+          name: linux
+          path: artifacts/linux
 
       - name: Download Windows binaries
         uses: actions/download-artifact@v4
