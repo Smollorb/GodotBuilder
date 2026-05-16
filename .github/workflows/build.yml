@@ -31,12 +31,6 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - name: linux
-            image: godot-linux
-            scons_platform: linuxbsd
-            extra_args: "accesskit=no"
-            sdk_path: '${GODOT_SDK_LINUX_X86_64}/bin'
-            build_editor: true
           - name: windows
             image: godot-windows
             scons_platform: windows
@@ -170,6 +164,9 @@ jobs:
           cp artifacts/windows/* final/templates/ || true
           cp artifacts/web/* final/templates/ || true
           cp artifacts/android/* final/templates/ || true
+
+      - name: Set lowercase owner
+        run: echo "OWNER=$(echo ${{ github.repository_owner }} | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
 
       - name: Login to GHCR
         run: echo "${{ secrets.GITHUB_TOKEN }}" | podman login ghcr.io -u ${{ github.actor }} --password-stdin
