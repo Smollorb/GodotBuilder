@@ -18,6 +18,7 @@ COPY templates /opt/godot/templates
 
 RUN chmod +x /opt/godot/godot.x86_64
 
-RUN mkdir -p /root/.local/share/godot/export_templates && ln -s /opt/godot/templates /root/.local/share/godot/export_templates/${GODOT_VERSION}
+RUN mkdir -p /root/.local/share/godot/export_templates && ln -s /opt/godot/templates /root/.local/share/godot/export_templates/${GODOT_VERSION} && \
+    mkdir -p /root/.local/share/godot/export_templates && ln -s /opt/godot/templates /github/home/.local/share/godot/export_templates/${GODOT_VERSION}
 
 ENTRYPOINT ["/opt/godot/godot.x86_64"]
