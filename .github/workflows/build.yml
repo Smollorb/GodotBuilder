@@ -6,7 +6,6 @@ on:
 jobs:
   prepare:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -18,17 +17,16 @@ jobs:
           git clone https://github.com/godotengine/godot.git
           cd godot
           git checkout 7775792057009cb27068f1a3252902fb9c991836
-      
+
       - name: Upload sources
         uses: actions/upload-artifact@v4
         with:
           name: godot-source
           path: godot
-  
+
   build_templates:
     runs-on: ubuntu-latest
     needs: prepare
-
     strategy:
       fail-fast: false
       matrix:
@@ -36,31 +34,36 @@ jobs:
           - name: linux
             image: godot-linux
             scons_platform: linuxbsd
-          
+            extra_args: "accesskit=no"
+            sdk_path: '${GODOT_SDK_LINUX_X86_64}/bin'
           - name: windows
             image: godot-windows
             scons_platform: windows
-
+            extra_args: "d3d12=no winrt=no accesskit=no"
+            sdk_path: '${GODOT_SDK_LINUX_X86_64}/bin'
           - name: web
             image: godot-web
             scons_platform: web
-          
+            extra_args: ""
+            sdk_path: '/usr/local/emsdk/upstream/emscripten'
           - name: android
             image: godot-android
             scons_platform: android
+            extra_args: "swappy=no"
+            sdk_path: '${GODOT_SDK_LINUX_X86_64}/bin'
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
           submodules: recursive
-        
+
       - name: Download Godot
         uses: actions/download-artifact@v4
         with:
           name: godot-source
           path: godot
-      
+
       - name: Cache SCons
         uses: actions/cache@v4
         with:
@@ -83,12 +86,11 @@ jobs:
       - name: Build template
         run: |
           podman run --rm \
-          -v ${{ github.workspace }}/godot:/godot \
-          -v $HOME/.scons_cache:/root/.scons_cache \
-          -w /godot \
-          ${{ matrix.image }}:master-f43 \
-          bash -c 'export PATH=$GODOT_SDK_LINUX_X86_64/bin:$PATH && scons cache_path=/root/.scons_cache platform=${{ matrix.scons_platform }} target=template_release production=yes'
-      
+            -v ${{ github.workspace }}/godot:/godot \
+            -v $HOME/.scons_cache:/root/.scons_cache \
+            -w /godot \
+            ${{ matrix.image }}:master-f43 \
+            bash -c 'export PATH=${{ matrix.sdk_path }}:$PATH && scons cache_path=/root/.scons_cache platform=${{ matrix.scons_platform }} target=template_release production=yes ${{ matrix.extra_args }}'
       - name: Collect binaries
         run: |
           mkdir -p artifacts/${{ matrix.name }}
@@ -99,15 +101,13 @@ jobs:
         with:
           name: ${{ matrix.name }}
           path: artifacts/${{ matrix.name }}/*
-  
+
   combine:
     runs-on: ubuntu-latest
     needs: build_templates
-
     permissions:
       contents: read
       packages: write
-
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -135,21 +135,19 @@ jobs:
         with:
           name: android
           path: artifacts/android
-      
+
       - name: Prepare final image files
         run: |
           mkdir -p final/templates
-
           cp artifacts/linux/*editor* final/godot.x86_64 || true
-
           cp artifacts/linux/*template* final/templates/ || true
           cp artifacts/windows/* final/templates/ || true
           cp artifacts/web/* final/templates/ || true
           cp artifacts/android/* final/templates/ || true
 
       - name: Login to GHCR
-        run: echo "${{ secrets.GITHUB_TOKEN }}" | podman login ghcr.io -u ${{ github.actor }} --password-stdin
-      
+        run: podman login ghcr.io -u ${{ github.actor }} --password-stdin
+
       - name: Build final image
         run: |
           podman build \
