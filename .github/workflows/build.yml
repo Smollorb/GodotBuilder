@@ -5,7 +5,7 @@ on:
       godot_repo:
         description: 'Godot repository URL'
         required: true
-        default: https://github.com/godotengine/godot
+        default: https://github.com/godotengine/godot.git
         type: string
       
       godot_commit:
