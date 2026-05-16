@@ -168,10 +168,10 @@ jobs:
       - name: Build final image
         run: |
           podman build \
-            -t ghcr.io/${{ github.repository_owner }}/godot-builder:latest \
+            -t ghcr.io/${{ env.OWNER }}/godot-builder:latest \
             -f Dockerfile.final \
             final
 
       - name: Push image
         run: |
-          podman push ghcr.io/${{ github.repository_owner }}/godot-builder:latest
+          podman push ghcr.io/${{ env.OWNER }}/godot-builder:latest
