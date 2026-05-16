@@ -1,0 +1,98 @@
+name: Build Godot Docker Image (combine only for debug)
+on:
+  workflow_dispatch:
+    inputs:
+      run_id:
+        description: "Run ID du workflow de build"
+        required: true
+        type: string
+      godot_commit:
+        description: "Godot commit/branch/tag"
+        required: true
+        default: 7775792057009cb27068f1a3252902fb9c991836
+        type: string
+      build_profile:
+        description: "Build profile"
+        required: true
+        default: "2d_only"
+        type: choice
+        options:
+          - 2d_only
+          - full
+
+jobs:
+  combine:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+      actions: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download Linux binaries
+        uses: actions/download-artifact@v4
+        with:
+          name: linux
+          path: artifacts/linux
+          run-id: ${{ inputs.run_id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Download Windows binaries
+        uses: actions/download-artifact@v4
+        with:
+          name: windows
+          path: artifacts/windows
+          run-id: ${{ inputs.run_id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Download Web binaries
+        uses: actions/download-artifact@v4
+        with:
+          name: web
+          path: artifacts/web
+          run-id: ${{ inputs.run_id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Download Android binaries
+        uses: actions/download-artifact@v4
+        with:
+          name: android
+          path: artifacts/android
+          run-id: ${{ inputs.run_id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Prepare final image files
+        run: |
+          mkdir -p final/templates
+          mv artifacts/linux/*editor* final/godot.x86_64 || true
+          mv artifacts/linux/*        final/templates/ || true
+          mv artifacts/windows/*      final/templates/ || true
+          mv artifacts/web/*          final/templates/ || true
+          mv artifacts/android/*      final/templates/ || true
+
+      - name: Set lowercase owner
+        run: echo "OWNER=$(echo ${{ github.repository_owner }} | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
+
+      - name: Login to GHCR
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | podman login ghcr.io -u ${{ github.actor }} --password-stdin
+
+      - name: Build final image
+        run: |
+          chmod +x final/godot.x86_64
+          SHORT_COMMIT=$(echo ${{ inputs.godot_commit }} | cut -c1-7)
+          NAME=${SHORT_COMMIT}-${{ inputs.build_profile }}
+          GODOT_VERSION=$(./final/godot.x86_64 --version | sed 's/\.custom_build//')
+
+          podman build \
+            --build-arg GODOT_VERSION=${GODOT_VERSION} \
+            -t ghcr.io/${{ env.OWNER }}/godot-builder:${NAME} \
+            -f Dockerfile.final \
+            final
+
+      - name: Push image
+        run: |
+          SHORT_COMMIT=$(echo ${{ inputs.godot_commit }} | cut -c1-7)
+          NAME=${SHORT_COMMIT}-${{ inputs.build_profile }}
+          podman push ghcr.io/${{ env.OWNER }}/godot-builder:${NAME}
