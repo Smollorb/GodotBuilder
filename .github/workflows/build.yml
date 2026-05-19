@@ -76,11 +76,11 @@ jobs:
           - name: web
             image: godot-web
             scons_platform: web
-            extra_args: ""
+            extra_args: "threads=no"
             sdk_path: '/usr/local/emsdk/upstream/emscripten'
             build_editor: false
-            to_replace: "godot.web.template_release.wasm32"
-            replace_into: "web_release"
+            to_replace: "godot.web.template_release.wasm32.nothreads"
+            replace_into: "web_nothreads_release"
           
           - name: android
             image: godot-android
