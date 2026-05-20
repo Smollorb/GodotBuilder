@@ -1,7 +1,3 @@
-platform="linuxbsd"
-target="template_release"
-arch="x86_64"
-
 production=True
 
 optimize="speed"
@@ -29,8 +25,15 @@ module_websocket_enabled=True
 module_webxr_enabled=False
 module_xatlas_unwrap_enabled=False
 
+module_text_server_adv_enabled=False
+
 disable_3d=True
 module_mono_enabled=False
-module_text_server_fb_enabled=False
+module_text_server_fb_enabled=True
 module_theora_enabled=False
 module_movie_writer_enabled=False
+
+module_tga_enabled=False
+module_bmp_enabled=False
+module_dds_enabled=False
+module_noise_enabled=False
