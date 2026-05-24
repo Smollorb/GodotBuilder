@@ -11,7 +11,7 @@ on:
       godot_commit:
         description: "Godot commit/branch/tag"
         required: true
-        default: 7775792057009cb27068f1a3252902fb9c991836 # 7775792057009cb27068f1a3252902fb9c991836 for 4.7.beta2
+        default: 86082170822e19ebb619c7f53c8fe54a6f8d3d2a # 86082170822e19ebb619c7f53c8fe54a6f8d3d2a for 4.7.beta3
         type: string
       
       build_profile:
