@@ -47,6 +47,7 @@ jobs:
         with:
           name: godot-source
           path: godot
+          retention-days: 1
 
   build_templates:
     runs-on: ubuntu-latest
@@ -171,6 +172,7 @@ jobs:
         with:
           name: ${{ matrix.name }}
           path: artifacts/${{ matrix.name }}/*
+          retention-days: 1
 
   combine:
     runs-on: ubuntu-latest
