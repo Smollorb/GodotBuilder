@@ -74,15 +74,24 @@ jobs:
             to_replace: "godot.windows.template_release"
             replace_into: "windows_release"
 
-          - name: web
+          - name: web-nothreads
             image: godot-web
             scons_platform: web
-            extra_args: "threads=no"
+            extra_args: "threads=no dlink_enabled=no"
             sdk_path: '/usr/local/emsdk/upstream/emscripten'
             build_editor: false
             to_replace: "godot.web.template_release.wasm32.nothreads"
             replace_into: "web_nothreads_release"
           
+          - name: web-nothreads-dlink
+            image: godot-web
+            scons_platform: web
+            extra_args: "threads=no dlink_enabled=yes"
+            sdk_path: '/usr/local/emsdk/upstream/emscripten'
+            build_editor: false
+            to_replace: "godot.web.template_release.wasm32.nothreads"
+            replace_into: "web_dlink_nothreads_release"
+
           - name: android
             image: godot-android
             scons_platform: android
