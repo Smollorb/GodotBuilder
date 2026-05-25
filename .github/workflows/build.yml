@@ -57,6 +57,7 @@ jobs:
       matrix:
         include:
           - name: linux
+            image_build: linux
             image: godot-linux
             scons_platform: linuxbsd
             extra_args: "accesskit=no"
@@ -66,6 +67,7 @@ jobs:
             replace_into: "linux_release"
 
           - name: windows
+            image_build: windows
             image: godot-windows
             scons_platform: windows
             extra_args: "d3d12=no winrt=no accesskit=no"
@@ -75,6 +77,7 @@ jobs:
             replace_into: "windows_release"
 
           - name: web-nothreads
+            image_build: web
             image: godot-web
             scons_platform: web
             extra_args: "threads=no dlink_enabled=no"
@@ -84,6 +87,7 @@ jobs:
             replace_into: "web_nothreads_release"
           
           - name: web-nothreads-dlink
+            image_build: web
             image: godot-web
             scons_platform: web
             extra_args: "threads=no dlink_enabled=yes"
@@ -93,6 +97,7 @@ jobs:
             replace_into: "web_dlink_nothreads_release"
 
           - name: android
+            image_build: android
             image: godot-android
             scons_platform: android
             extra_args: "swappy=no generate_apk=yes"
@@ -127,7 +132,7 @@ jobs:
           cp custom_build.sh build-containers/custom_build.sh
           cd build-containers
           chmod +x ./custom_build.sh
-          ./custom_build.sh master f43 ${{ matrix.name }}
+          ./custom_build.sh master f43 ${{ matrix.image_build }}
 
       - name: Build template
         run: |
