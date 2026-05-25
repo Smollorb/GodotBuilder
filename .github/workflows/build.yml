@@ -93,7 +93,7 @@ jobs:
             extra_args: "threads=no dlink_enabled=yes"
             sdk_path: '/usr/local/emsdk/upstream/emscripten'
             build_editor: false
-            to_replace: "godot.web.template_release.wasm32.nothreads"
+            to_replace: "godot.web.template_release.wasm32.nothreads.dlink"
             replace_into: "web_dlink_nothreads_release"
 
           - name: android
