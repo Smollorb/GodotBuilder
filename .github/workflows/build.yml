@@ -205,11 +205,17 @@ jobs:
           name: windows
           path: artifacts/windows
 
-      - name: Download Web binaries
+      - name: Download Web nothreads binaries
         uses: actions/download-artifact@v4
         with:
-          name: web
-          path: artifacts/web
+          name: web-nothreads
+          path: artifacts/web-nothreads
+
+      - name: Download Web nothreads dlink binaries
+        uses: actions/download-artifact@v4
+        with:
+          name: web-nothreads-dlink
+          path: artifacts/web-nothreads-dlink
 
       - name: Download Android binaries
         uses: actions/download-artifact@v4
@@ -223,7 +229,7 @@ jobs:
           mv artifacts/linux/*editor* final/godot.x86_64 || true
           mv artifacts/linux/*        final/templates/ || true
           mv artifacts/windows/*      final/templates/ || true
-          mv artifacts/web/*          final/templates/ || true
+          mv artifacts/web*/*         final/templates/ || true
           mv artifacts/android/*      final/templates/ || true
 
       - name: Set lowercase owner
